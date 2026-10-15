@@ -1,0 +1,138 @@
+diff --git a/src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java b/src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java
+index e5edf5b..ae60a94 100644
+--- a/src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java
++++ b/src/main/java/org/springframework/samples/petclinic/owner/OwnerController.java
+@@ -142,7 +142,7 @@ class OwnerController {
+ 		int pageSize = 5;
+ 		int validatedPage = Math.max(page, 1);
+ 		Pageable pageable = PageRequest.of(validatedPage - 1, pageSize);
+-		return owners.findByLastNameStartingWith(lastname, pageable);
++		return owners.findByLastNameStartingWithIgnoreCase(lastname, pageable);
+ 	}
+ 
+ 	@GetMapping("/owners/{ownerId}/edit")
+diff --git a/src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java b/src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java
+index d2b3dde..20b22d0 100644
+--- a/src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java
++++ b/src/main/java/org/springframework/samples/petclinic/owner/OwnerRepository.java
+@@ -37,12 +37,12 @@ public interface OwnerRepository extends JpaRepository<Owner, Integer> {
+ 
+ 	/**
+ 	 * Retrieve {@link Owner}s from the data store by last name, returning all owners
+-	 * whose last name <i>starts</i> with the given name.
++	 * whose last name <i>starts</i> with the given name, ignoring case.
+ 	 * @param lastName Value to search for
+ 	 * @return a Collection of matching {@link Owner}s (or an empty Collection if none
+ 	 * found)
+ 	 */
+-	Page<Owner> findByLastNameStartingWith(String lastName, Pageable pageable);
++	Page<Owner> findByLastNameStartingWithIgnoreCase(String lastName, Pageable pageable);
+ 
+ 	/**
+ 	 * Retrieve an {@link Owner} from the data store by id.
+diff --git a/src/test/java/org/springframework/samples/petclinic/owner/OwnerControllerTests.java b/src/test/java/org/springframework/samples/petclinic/owner/OwnerControllerTests.java
+index c8ce4f5..0b18839 100644
+--- a/src/test/java/org/springframework/samples/petclinic/owner/OwnerControllerTests.java
++++ b/src/test/java/org/springframework/samples/petclinic/owner/OwnerControllerTests.java
+@@ -93,7 +93,7 @@ class OwnerControllerTests {
+ 	void setup() {
+ 
+ 		Owner george = george();
+-		given(this.owners.findByLastNameStartingWith(eq("Franklin"), any(Pageable.class)))
++		given(this.owners.findByLastNameStartingWithIgnoreCase(eq("Franklin"), any(Pageable.class)))
+ 			.willReturn(new PageImpl<>(List.of(george)));
+ 
+ 		given(this.owners.findById(TEST_OWNER_ID)).willReturn(Optional.of(george));
+@@ -174,7 +174,7 @@ class OwnerControllerTests {
+ 	@Test
+ 	void processFindFormSuccess() throws Exception {
+ 		Page<Owner> tasks = new PageImpl<>(List.of(george(), new Owner()));
+-		when(this.owners.findByLastNameStartingWith(anyString(), any(Pageable.class))).thenReturn(tasks);
++		when(this.owners.findByLastNameStartingWithIgnoreCase(anyString(), any(Pageable.class))).thenReturn(tasks);
+ 		mockMvc.perform(get("/owners?page=1")).andExpect(status().isOk()).andExpect(view().name("owners/ownersList"));
+ 	}
+ 
+@@ -190,7 +190,7 @@ class OwnerControllerTests {
+ 	@Test
+ 	void processFindFormByLastName() throws Exception {
+ 		Page<Owner> tasks = new PageImpl<>(List.of(george()));
+-		when(this.owners.findByLastNameStartingWith(eq("Franklin"), any(Pageable.class))).thenReturn(tasks);
++		when(this.owners.findByLastNameStartingWithIgnoreCase(eq("Franklin"), any(Pageable.class))).thenReturn(tasks);
+ 		mockMvc.perform(get("/owners?page=1").param("lastName", "Franklin"))
+ 			.andExpect(status().is3xxRedirection())
+ 			.andExpect(view().name("redirect:/owners/" + TEST_OWNER_ID));
+@@ -199,7 +199,7 @@ class OwnerControllerTests {
+ 	@Test
+ 	void processFindFormIgnoresSurroundingWhitespace() throws Exception {
+ 		Page<Owner> tasks = new PageImpl<>(List.of(george()));
+-		when(this.owners.findByLastNameStartingWith(eq("Franklin"), any(Pageable.class))).thenReturn(tasks);
++		when(this.owners.findByLastNameStartingWithIgnoreCase(eq("Franklin"), any(Pageable.class))).thenReturn(tasks);
+ 
+ 		for (String lastName : List.of(" Franklin", "Franklin ", " Franklin ")) {
+ 			mockMvc.perform(get("/owners?page=1").param("lastName", lastName))
+@@ -207,25 +207,26 @@ class OwnerControllerTests {
+ 				.andExpect(view().name("redirect:/owners/" + TEST_OWNER_ID));
+ 		}
+ 
+-		verify(this.owners, times(3)).findByLastNameStartingWith(eq("Franklin"), any(Pageable.class));
++		verify(this.owners, times(3)).findByLastNameStartingWithIgnoreCase(eq("Franklin"), any(Pageable.class));
+ 	}
+ 
+ 	@Test
+ 	void processFindFormWithWhitespaceOnlyLastNameReturnsAllOwners() throws Exception {
+ 		Page<Owner> tasks = new PageImpl<>(List.of(george(), new Owner()));
+-		when(this.owners.findByLastNameStartingWith(eq(""), any(Pageable.class))).thenReturn(tasks);
++		when(this.owners.findByLastNameStartingWithIgnoreCase(eq(""), any(Pageable.class))).thenReturn(tasks);
+ 
+ 		mockMvc.perform(get("/owners?page=1").param("lastName", "   "))
+ 			.andExpect(status().isOk())
+ 			.andExpect(view().name("owners/ownersList"));
+ 
+-		verify(this.owners).findByLastNameStartingWith(eq(""), any(Pageable.class));
++		verify(this.owners).findByLastNameStartingWithIgnoreCase(eq(""), any(Pageable.class));
+ 	}
+ 
+ 	@Test
+ 	void processFindFormNoOwnersFound() throws Exception {
+ 		Page<Owner> tasks = new PageImpl<>(List.of());
+-		when(this.owners.findByLastNameStartingWith(eq("Unknown Surname"), any(Pageable.class))).thenReturn(tasks);
++		when(this.owners.findByLastNameStartingWithIgnoreCase(eq("Unknown Surname"), any(Pageable.class)))
++			.thenReturn(tasks);
+ 		mockMvc.perform(get("/owners?page=1").param("lastName", "Unknown Surname"))
+ 			.andExpect(status().isOk())
+ 			.andExpect(model().attributeHasFieldErrors("owner", "lastName"))
+diff --git a/src/test/java/org/springframework/samples/petclinic/service/ClinicServiceTests.java b/src/test/java/org/springframework/samples/petclinic/service/ClinicServiceTests.java
+index 96f90df..b6d352a 100644
+--- a/src/test/java/org/springframework/samples/petclinic/service/ClinicServiceTests.java
++++ b/src/test/java/org/springframework/samples/petclinic/service/ClinicServiceTests.java
+@@ -88,10 +88,10 @@ class ClinicServiceTests {
+ 
+ 	@Test
+ 	void shouldFindOwnersByLastName() {
+-		Page<Owner> owners = this.owners.findByLastNameStartingWith("Davis", pageable);
++		Page<Owner> owners = this.owners.findByLastNameStartingWithIgnoreCase("Davis", pageable);
+ 		assertThat(owners).hasSize(2);
+ 
+-		owners = this.owners.findByLastNameStartingWith("Daviss", pageable);
++		owners = this.owners.findByLastNameStartingWithIgnoreCase("Daviss", pageable);
+ 		assertThat(owners).isEmpty();
+ 	}
+ 
+@@ -109,7 +109,7 @@ class ClinicServiceTests {
+ 	@Test
+ 	@Transactional
+ 	void shouldInsertOwner() {
+-		Page<Owner> owners = this.owners.findByLastNameStartingWith("Schultz", pageable);
++		Page<Owner> owners = this.owners.findByLastNameStartingWithIgnoreCase("Schultz", pageable);
+ 		int found = (int) owners.getTotalElements();
+ 
+ 		Owner owner = new Owner();
+@@ -121,7 +121,7 @@ class ClinicServiceTests {
+ 		this.owners.save(owner);
+ 		assertThat(owner.getId()).isNotZero();
+ 
+-		owners = this.owners.findByLastNameStartingWith("Schultz", pageable);
++		owners = this.owners.findByLastNameStartingWithIgnoreCase("Schultz", pageable);
+ 		assertThat(owners.getTotalElements()).isEqualTo(found + 1);
+ 	}
+ 

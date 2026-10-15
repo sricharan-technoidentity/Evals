@@ -1,0 +1,10 @@
+# Used when running with `-T sandbox=docker`. Each sample gets a fresh container.
+services:
+  default:
+    build: .
+    init: true
+    command: tail -f /dev/null
+    working_dir: /workspace
+    cpus: 2.0
+    mem_limit: 4gb
+    # Network is needed for `git clone`, Maven and pnpm downloads during setup.

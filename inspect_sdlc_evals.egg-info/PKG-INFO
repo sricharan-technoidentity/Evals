@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: inspect-sdlc-evals
+Version: 0.2.0
+Summary: POC: evaluate a ticket-to-PR coding agent with Inspect AI on a Java and a TypeScript repo
+Requires-Python: >=3.10
+Requires-Dist: inspect-ai==0.3.280
+Requires-Dist: anthropic

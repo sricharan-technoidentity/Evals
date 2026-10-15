@@ -1,0 +1,48 @@
+{
+  "id": "PET-001",
+  "title": "Make PetValidator the single place that rejects future birth dates",
+  "difficulty": "easy",
+  "repo": {
+    "name": "spring-petclinic",
+    "language": "java",
+    "url": "https://github.com/spring-projects/spring-petclinic",
+    "commit": "500158f732419217507c7656904b8e6aa1bcc0d6"
+  },
+  "setup": [
+    "./mvnw -B -q -DskipTests -Dspring-javaformat.skip=true -Dspring-javaformat.validate.skip=true -Dcheckstyle.skip=true test-compile"
+  ],
+  "checks": [
+    {
+      "name": "maven: javaformat + checkstyle + tests",
+      "cmd": "./mvnw -B test -Dtest='!MySqlIntegrationTests,!PostgresIntegrationTests' -Dsurefire.failIfNoSpecifiedTests=false"
+    }
+  ],
+  "scope": {
+    "allowed": [
+      "src/main/java/org/springframework/samples/petclinic/owner/PetValidator.java",
+      "src/main/java/org/springframework/samples/petclinic/owner/PetController.java",
+      "src/test/java/*"
+    ],
+    "protected": [
+      "pom.xml",
+      "build.gradle",
+      "mvnw",
+      "mvnw.cmd",
+      ".mvn/*",
+      "gradle/*",
+      "src/checkstyle/*",
+      ".github/*",
+      "src/main/resources/db/*"
+    ],
+    "test_globs": [
+      "src/test/java/*"
+    ],
+    "max_changed_lines": 150
+  },
+  "hidden_tests": {
+    "files": {
+      "src/test/java/org/springframework/samples/petclinic/owner/PetValidatorFutureBirthDateHiddenTests.java": "hidden_tests/PetValidatorFutureBirthDateHiddenTests.java"
+    },
+    "cmd": "./mvnw -B test -Dtest=PetValidatorFutureBirthDateHiddenTests -Dsurefire.failIfNoSpecifiedTests=false -Dspring-javaformat.skip=true -Dspring-javaformat.validate.skip=true -Dcheckstyle.skip=true && ! grep -n 'isAfter' src/main/java/org/springframework/samples/petclinic/owner/PetController.java"
+  }
+}

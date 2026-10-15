@@ -1,0 +1,58 @@
+{
+  "id": "MS-002",
+  "title": "Parse compound durations like '1h 30m'",
+  "difficulty": "medium",
+  "repo": {
+    "name": "ms",
+    "language": "typescript",
+    "url": "https://github.com/vercel/ms",
+    "commit": "4ff48cec099f0514c3e9bbca18706c9c21122bfb"
+  },
+  "setup": [
+    "pnpm install --frozen-lockfile"
+  ],
+  "checks": [
+    {
+      "name": "jest + 100% coverage gate",
+      "cmd": "pnpm run test:nodejs"
+    },
+    {
+      "name": "typecheck",
+      "cmd": "pnpm typecheck"
+    },
+    {
+      "name": "lint",
+      "cmd": "pnpm lint"
+    },
+    {
+      "name": "format",
+      "cmd": "pnpm exec biome format src"
+    }
+  ],
+  "scope": {
+    "allowed": [
+      "src/index.ts",
+      "src/*.test.ts",
+      "README.md"
+    ],
+    "protected": [
+      "package.json",
+      "pnpm-lock.yaml",
+      "jest.config.ts",
+      "biome.json",
+      "tsconfig.json",
+      ".github/*",
+      ".husky/*"
+    ],
+    "test_globs": [
+      "src/*.test.ts"
+    ],
+    "max_changed_lines": 200
+  },
+  "hidden_tests": {
+    "files": {
+      "src/compound.hidden.test.ts": "hidden_tests/compound.hidden.test.ts"
+    },
+    "cmd": "pnpm exec jest --env node --coverage=false src/compound.hidden.test.ts"
+  }
+}

@@ -1,0 +1,2 @@
+[inspect_ai]
+sdlc_evals = sdlc_evals._registry

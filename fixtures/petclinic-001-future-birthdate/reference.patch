@@ -1,0 +1,59 @@
+diff --git a/src/main/java/org/springframework/samples/petclinic/owner/PetController.java b/src/main/java/org/springframework/samples/petclinic/owner/PetController.java
+index 845c116..905dc95 100644
+--- a/src/main/java/org/springframework/samples/petclinic/owner/PetController.java
++++ b/src/main/java/org/springframework/samples/petclinic/owner/PetController.java
+@@ -15,7 +15,6 @@
+  */
+ package org.springframework.samples.petclinic.owner;
+ 
+-import java.time.LocalDate;
+ import java.util.Collection;
+ import java.util.Objects;
+ import java.util.Optional;
+@@ -112,11 +111,6 @@ class PetController {
+ 			result.rejectValue("name", "duplicate", "already exists");
+ 		}
+ 
+-		LocalDate currentDate = LocalDate.now();
+-		if (pet.getBirthDate() != null && pet.getBirthDate().isAfter(currentDate)) {
+-			result.rejectValue("birthDate", "typeMismatch.birthDate");
+-		}
+-
+ 		if (result.hasErrors()) {
+ 			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
+ 		}
+@@ -155,11 +149,6 @@ class PetController {
+ 			}
+ 		}
+ 
+-		LocalDate currentDate = LocalDate.now();
+-		if (pet.getBirthDate() != null && pet.getBirthDate().isAfter(currentDate)) {
+-			result.rejectValue("birthDate", "typeMismatch.birthDate");
+-		}
+-
+ 		if (result.hasErrors()) {
+ 			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
+ 		}
+diff --git a/src/main/java/org/springframework/samples/petclinic/owner/PetValidator.java b/src/main/java/org/springframework/samples/petclinic/owner/PetValidator.java
+index db847c8..cd0c807 100644
+--- a/src/main/java/org/springframework/samples/petclinic/owner/PetValidator.java
++++ b/src/main/java/org/springframework/samples/petclinic/owner/PetValidator.java
+@@ -15,6 +15,8 @@
+  */
+ package org.springframework.samples.petclinic.owner;
+ 
++import java.time.LocalDate;
++
+ import org.springframework.util.StringUtils;
+ import org.springframework.validation.Errors;
+ import org.springframework.validation.Validator;
+@@ -56,6 +58,9 @@ public class PetValidator implements Validator {
+ 		if (pet.getBirthDate() == null) {
+ 			errors.rejectValue("birthDate", REQUIRED, REQUIRED);
+ 		}
++		else if (pet.getBirthDate().isAfter(LocalDate.now())) {
++			errors.rejectValue("birthDate", "typeMismatch.birthDate");
++		}
+ 	}
+ 
+ 	/**

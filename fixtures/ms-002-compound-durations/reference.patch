@@ -1,0 +1,65 @@
+diff --git a/src/index.ts b/src/index.ts
+index d50e3c7..d029f83 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -74,6 +74,38 @@ export function parse(str: string): number {
+       `Value provided to ms.parse() must be a string with length between 1 and 99. value=${JSON.stringify(str)}`,
+     );
+   }
++
++  const single = parseSegment(str);
++  if (!Number.isNaN(single)) {
++    return single;
++  }
++
++  // Compound durations, e.g. "1h 30m" or "1h30m": every segment needs a unit.
++  if (!COMPOUND.test(str.trim())) {
++    return NaN;
++  }
++  let total = 0;
++  for (const segment of str.trim().matchAll(SEGMENT)) {
++    total += parseSegment(segment[0].trim());
++  }
++  return total;
++}
++
++const UNIT_PATTERN =
++  'milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|months?|mo|years?|yrs?|y';
++const SEGMENT = new RegExp(
++  `-?\\d*\\.?\\d+ *(?:${UNIT_PATTERN})(?![a-z])`,
++  'gi',
++);
++const COMPOUND = new RegExp(
++  `^-?\\d*\\.?\\d+ *(?:${UNIT_PATTERN})(?:\\s*\\d*\\.?\\d+ *(?:${UNIT_PATTERN}))+$`,
++  'i',
++);
++
++/**
++ * Parse a single "<number><unit>" segment.
++ */
++function parseSegment(str: string): number {
+   const match =
+     /^(?<value>-?\d*\.?\d+) *(?<unit>milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|months?|mo|years?|yrs?|y)?$/i.exec(
+       str,
+diff --git a/src/parse.test.ts b/src/parse.test.ts
+index 9182411..7b8ba1b 100644
+--- a/src/parse.test.ts
++++ b/src/parse.test.ts
+@@ -12,6 +12,17 @@ describe('parse(string)', () => {
+     expect(parse('100')).toBe(100);
+   });
+ 
++  it('should sum compound durations', () => {
++    expect(parse('1h 30m')).toBe(5400000);
++    expect(parse('1h30m')).toBe(5400000);
++    expect(parse('1 hour 30 minutes')).toBe(5400000);
++  });
++
++  it('should return NaN for invalid compound durations', () => {
++    expect(parse('1h 30')).toBeNaN();
++    expect(parse('1h 30x')).toBeNaN();
++  });
++
+   it('should convert from m to ms', () => {
+     expect(parse('1m')).toBe(60000);
+   });
